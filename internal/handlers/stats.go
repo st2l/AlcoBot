@@ -165,7 +165,7 @@ func HandleBackToUsersList(ctx context.Context, b *telegrambot.Bot, update *tele
 
 	var inlineKeyboard [][]telegramodels.InlineKeyboardButton
 	for _, user := range listUsers {
-		buttonText := fmt.Sprintf("User ID: %d", user.TelegramID)
+		buttonText := fmt.Sprintf("User: %s", user.FirstName)
 		callbackData := fmt.Sprintf("user_%d", user.TelegramID)
 		row := []telegramodels.InlineKeyboardButton{
 			{
