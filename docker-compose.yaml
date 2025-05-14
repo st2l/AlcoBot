@@ -1,35 +1,30 @@
 version: "3.8"
 
 services:
-  mongodb:
-    image: mongo:latest
-    restart: always
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongodb_data:/data/db
-      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: ${MONGODB_USERNAME}
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_PASSWORD}
-    healthcheck:
-      test: |
-        mongosh --quiet --eval "db.runCommand({ping: 1})" -u "${MONGODB_USERNAME}" -p "${MONGODB_PASSWORD}" --authenticationDatabase "admin"
-      interval: 10s
-      timeout: 10s
-      retries: 10
-
   alcobot:
     build: .
     restart: always
     depends_on:
-      mongodb:
-        condition: service_healthy
+      - mongodb
     environment:
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
       - ADMIN_IDS=${ADMIN_IDS}
-      - MONGO_URI=mongodb://${MONGODB_USERNAME}:${MONGODB_PASSWORD}@mongodb:27017/alcobot?authSource=admin
+      - MONGO_URI=mongodb://${MONGODB_USERNAME}:${MONGODB_PASSWORD}@mongodb:27017/
       - DATABASE_NAME=alcobot
+    networks:
+      - alcobot_network
+
+  mongodb:
+    image: mongo:latest
+    restart: always
+    # Removed port mapping to keep MongoDB inaccessible from outside
+    volumes:
+      - mongodb_data:/data/db
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGODB_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGODB_PASSWORD}
+    networks:
+      - alcobot_network
 
   mongo-express:
     image: mongo-express:latest
@@ -37,8 +32,7 @@ services:
     ports:
       - "8081:8081"
     depends_on:
-      mongodb:
-        condition: service_healthy
+      - mongodb
     environment:
       - ME_CONFIG_MONGODB_SERVER=mongodb
       - ME_CONFIG_MONGODB_PORT=27017
@@ -46,7 +40,12 @@ services:
       - ME_CONFIG_MONGODB_ADMINPASSWORD=${MONGODB_PASSWORD}
       - ME_CONFIG_BASICAUTH_USERNAME=${ME_USERNAME}
       - ME_CONFIG_BASICAUTH_PASSWORD=${ME_PASSWORD}
-      - ME_CONFIG_MONGODB_AUTH_DATABASE=admin
+    networks:
+      - alcobot_network
+
+networks:
+  alcobot_network:
+    driver: bridge
 
 volumes:
   mongodb_data:
