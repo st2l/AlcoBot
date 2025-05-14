@@ -5,11 +5,12 @@ services:
     build: .
     restart: always
     depends_on:
-      - mongodb
+      mongodb:
+        condition: service_healthy
     environment:
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
       - ADMIN_IDS=${ADMIN_IDS}
-      - MONGO_URI=mongodb://${MONGODB_USERNAME}:${MONGODB_PASSWORD}@mongodb:27017/
+      - MONGO_URI=mongodb://${MONGODB_USERNAME}:${MONGODB_PASSWORD}@mongodb:27017/alcobot?authSource=admin
       - DATABASE_NAME=alcobot
 
   mongodb:
@@ -22,6 +23,11 @@ services:
     environment:
       - MONGO_INITDB_ROOT_USERNAME=${MONGODB_USERNAME}
       - MONGO_INITDB_ROOT_PASSWORD=${MONGODB_PASSWORD}
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh -u ${MONGODB_USERNAME} -p ${MONGODB_PASSWORD} --quiet || exit 1
+      interval: 10s
+      timeout: 10s
+      retries: 5
 
   mongo-express:
     image: mongo-express:latest
@@ -29,7 +35,8 @@ services:
     ports:
       - "8081:8081"
     depends_on:
-      - mongodb
+      mongodb:
+        condition: service_healthy
     environment:
       - ME_CONFIG_MONGODB_SERVER=mongodb
       - ME_CONFIG_MONGODB_PORT=27017
@@ -37,6 +44,12 @@ services:
       - ME_CONFIG_MONGODB_ADMINPASSWORD=${MONGODB_PASSWORD}
       - ME_CONFIG_BASICAUTH_USERNAME=${ME_USERNAME}
       - ME_CONFIG_BASICAUTH_PASSWORD=${ME_PASSWORD}
+      - ME_CONFIG_MONGODB_AUTH_DATABASE=admin
 
 volumes:
   mongodb_data:
+
+networks:
+  default:
+    name: alcobot_network
+    driver: bridge
