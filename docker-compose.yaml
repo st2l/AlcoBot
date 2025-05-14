@@ -9,7 +9,7 @@ services:
     environment:
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
       - ADMIN_IDS=${ADMIN_IDS}
-      - MONGO_URI=mongodb://admin:password@mongodb:27017/
+      - MONGO_URI=mongodb://admin:${MONGO_PASSWORD}@mongodb:27017/
       - DATABASE_NAME=alcobot
 
   mongodb:
@@ -21,7 +21,7 @@ services:
       - mongodb_data:/data/db
     environment:
       - MONGO_INITDB_ROOT_USERNAME=admin
-      - MONGO_INITDB_ROOT_PASSWORD=password
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD}
 
   mongo-express:
     image: mongo-express:latest
@@ -34,9 +34,9 @@ services:
       - ME_CONFIG_MONGODB_SERVER=mongodb
       - ME_CONFIG_MONGODB_PORT=27017
       - ME_CONFIG_MONGODB_ADMINUSERNAME=admin
-      - ME_CONFIG_MONGODB_ADMINPASSWORD=password
+      - ME_CONFIG_MONGODB_ADMINPASSWORD=${MONGO_PASSWORD}
       - ME_CONFIG_BASICAUTH_USERNAME=admin
-      - ME_CONFIG_BASICAUTH_PASSWORD=password
+      - ME_CONFIG_BASICAUTH_PASSWORD=${ME_PASSWORD}
 
 volumes:
   mongodb_data:
