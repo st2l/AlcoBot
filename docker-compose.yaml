@@ -9,22 +9,19 @@ services:
     environment:
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
       - ADMIN_IDS=${ADMIN_IDS}
-      - MONGO_URI=mongodb://${MONGODB_USERNAME}:${MONGODB_PASSWORD}@mongodb:27017/
+      - MONGO_URI=mongodb://admin:${MONGO_DB_PASSWD}@mongodb:27017/
       - DATABASE_NAME=alcobot
-    networks:
-      - alcobot_network
 
   mongodb:
     image: mongo:latest
     restart: always
-    # Removed port mapping to keep MongoDB inaccessible from outside
+    ports:
+      - "27017:27017"
     volumes:
       - mongodb_data:/data/db
     environment:
-      - MONGO_INITDB_ROOT_USERNAME=${MONGODB_USERNAME}
-      - MONGO_INITDB_ROOT_PASSWORD=${MONGODB_PASSWORD}
-    networks:
-      - alcobot_network
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_DB_PASSWD}
 
   mongo-express:
     image: mongo-express:latest
@@ -36,16 +33,10 @@ services:
     environment:
       - ME_CONFIG_MONGODB_SERVER=mongodb
       - ME_CONFIG_MONGODB_PORT=27017
-      - ME_CONFIG_MONGODB_ADMINUSERNAME=${MONGODB_USERNAME}
-      - ME_CONFIG_MONGODB_ADMINPASSWORD=${MONGODB_PASSWORD}
-      - ME_CONFIG_BASICAUTH_USERNAME=${ME_USERNAME}
-      - ME_CONFIG_BASICAUTH_PASSWORD=${ME_PASSWORD}
-    networks:
-      - alcobot_network
-
-networks:
-  alcobot_network:
-    driver: bridge
+      - ME_CONFIG_MONGODB_ADMINUSERNAME=admin
+      - ME_CONFIG_MONGODB_ADMINPASSWORD=${MONGO_DB_PASSWD}
+      - ME_CONFIG_BASICAUTH_USERNAME=admin
+      - ME_CONFIG_BASICAUTH_PASSWORD=${MONGO_DB_PASSWD}
 
 volumes:
   mongodb_data:
